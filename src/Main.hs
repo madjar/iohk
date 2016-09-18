@@ -20,6 +20,8 @@ import           Network.Transport.TCP            (createTransport,
 import           Options.Applicative
 import           System.Random
 
+import Raft
+
 nodes = [ ("127.0.0.1", "10501")
         , ("127.0.0.1", "10502")
         , ("127.0.0.1", "10503")
@@ -46,7 +48,7 @@ main = do
   -- Infinite sequence of floats
   let gen = mkStdGen (seed config)
       numbers = map (1 -)  -- randoms gives us [0,1), we want (0,1]
-                    (randoms gen)
+                    (randoms gen) :: [Float]
 
   Right t <- createTransport "127.0.0.1" (port config) defaultTCPParameters
   node <- newLocalNode t initRemoteTable
@@ -64,17 +66,18 @@ main = do
 
     -- TODO signalling system to start
     traceM $ "I am " <> show self <> "."
-    traceM "Waiting for all nodes to come online."
-    liftIO $ threadDelay $ 1000 * 1000 * 2
+    -- traceM "Waiting for all nodes to come online."
+    -- liftIO $ threadDelay $ 1000 * 1000 * 2
 
-    traceM "Starting to send."
+    -- traceM "Starting to send."
 
     now <- liftIO getCurrentTime
     let sendUntil = addUTCTime (fromInteger $ sendFor config) now
         waitUntil = addUTCTime (fromInteger $ waitFor config) sendUntil
 
-    messages <- nodeProcess myId otherNodes sendUntil waitUntil numbers
-    liftIO $ printResult messages
+    runNode (localNodeId node) otherNodes
+    -- messages <- nodeProcess myId otherNodes sendUntil waitUntil numbers
+    -- liftIO $ printResult messages
   return ()
 
 
