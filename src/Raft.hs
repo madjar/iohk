@@ -83,12 +83,12 @@ followerProcess = do
 
 handleAppendEntries :: RMessage -> RProcess ()
 handleAppendEntries r@AppendEntries {..} = do
-    traceShowM r
     myTerm <- use currentTerm
     when (term > myTerm) $
         do traceM $ "Bowing to " ++ show leaderId ++ " for term " ++ show term
            currentTerm .= term
            votedFor .= Nothing
+    resetTimeout
     followerProcess
 
 handleVoteRequest :: RMessage -> RProcess ()
@@ -163,6 +163,7 @@ ensuringCurrentTerm term action = do
             traceM "Encountered a newer term, resetting"
             currentTerm .= term
             votedFor .= Nothing
+            resetTimeout
             followerProcess
         else action
 
