@@ -104,7 +104,7 @@ nodeProcess myId otherNodes sendUntil waitUntil numbers = evalStateT (exchanges 
                                lift $ forM_ otherNodes (\n -> nsendRemote n "receiver" msg)
 
         receiveOne :: StateT Int Process (Maybe Msg)
-        receiveOne = do result <- lift $ expectTimeout 1000
+        receiveOne = do result <- lift $ expectTimeout 100000
                         case result of
                           Just msg@Msg{ time = time} -> do modify' (\currentTime -> max currentTime time + 1)
                                                            return (Just msg)
